@@ -101,6 +101,15 @@ function AccountList() {
               Monitor and manage all bank accounts for fraud detection and
               suspicious activity tracking
             </p>
+            <p
+              className="note-text"
+              style={{ color: "#ff6b6b", marginTop: "10px" }}>
+              NOTE: GET DATA BEFORE TEST
+              <br />
+              GET: FOR LOADING DATA INTO CENTER SYSTEM FROM BANK
+              <br />
+              TEST: TO CALCULATE FRUAD SCORE
+            </p>
           </div>
           <div className="header-actions">
             <button
@@ -175,10 +184,6 @@ function AccountList() {
               )}
             </div>
             <div className="account-details">
-              <div className="detail-item">
-                <span className="detail-label">Balance</span>
-                <span className="detail-value">${account.balance}</span>
-              </div>
               <div className="detail-item">
                 <span className="detail-label">Transaction Frequency</span>
                 <span className="detail-value">{account.frequency}</span>

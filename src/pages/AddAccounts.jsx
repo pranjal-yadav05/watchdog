@@ -108,6 +108,11 @@ function AddAccounts() {
               Generate a set of accounts with transactions and fraud patterns
               for testing
             </p>
+            <p
+              className="note-text"
+              style={{ color: "#ff6b6b", marginTop: "10px" }}>
+              NOTE: THIS WILL ADD THE DUMMY DATA TO BANK MICROSERVICE
+            </p>
           </div>
         </div>
       </div>
