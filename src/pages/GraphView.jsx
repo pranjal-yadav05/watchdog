@@ -4,7 +4,7 @@ import axios from 'axios';
 import ForceGraph2D from 'react-force-graph-2d';
 import './GraphView.css';
 
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL + '/api/graph';
+const API_BASE_URL = 'http://localhost:9000/api/graph';
 
 function GraphView() {
   const { accountNumber, level: initialLevel } = useParams();

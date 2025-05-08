@@ -10,6 +10,7 @@ import SuspiciousTransactions from "./pages/SuspiciousTransactions";
 import UserDetails from "./pages/UserDetails";
 import LandingPage from "./pages/LandingPage";
 import AddBank from "./pages/AddBank";
+import AddAccounts from "./pages/AddAccounts";
 
 function App() {
   return (
@@ -29,6 +30,7 @@ function App() {
               element={<GraphView />}
             />
             <Route path="/add-bank" element={<AddBank />} />
+            <Route path="/add-accounts" element={<AddAccounts />} />
           </Routes>
         </div>
       </div>

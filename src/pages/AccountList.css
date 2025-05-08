@@ -475,3 +475,44 @@
   align-items: center;
   justify-content: space-between;
 }
+
+.header-actions {
+  display: flex;
+  gap: 1rem;
+  margin-left: auto;
+}
+
+.action-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.action-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.test-button {
+  background-color: #3498db;
+  color: white;
+}
+
+.test-button:hover:not(:disabled) {
+  background-color: #2980b9;
+}
+
+.get-data-button {
+  background-color: #2ecc71;
+  color: white;
+}
+
+.get-data-button:hover:not(:disabled) {
+  background-color: #27ae60;
+}

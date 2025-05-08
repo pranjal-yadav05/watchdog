@@ -34,9 +34,35 @@ function AccountList() {
     }
   };
 
+  const handleTest = async () => {
+    try {
+      setIsRefreshing(true);
+      await axios.get("https://frauddetection-r211.onrender.com/api/test");
+      await fetchAccounts(); // Refresh the page data
+    } catch (err) {
+      setError("Failed to run test. Please try again later.");
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
+  const handleGetData = async () => {
+    try {
+      setIsRefreshing(true);
+      await axios.get(`${API_BASE_URL}/transactions`);
+      await fetchAccounts(); // Refresh the page data
+    } catch (err) {
+      setError("Failed to get data. Please try again later.");
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
   const handleViewGraph = (accountNumber) => {
     navigate(`/graph/${accountNumber}/2`);
   };
+
+  const isSuspicious = (account) => account.suspiciousScore > 50;
 
   const filteredAccounts = accounts.filter((account) => {
     const matchesSearch = account.accountNumber
@@ -44,8 +70,8 @@ function AccountList() {
       .includes(searchTerm.toLowerCase());
     const matchesFilter =
       filter === "all" ||
-      (filter === "suspicious" && account.suspicious) ||
-      (filter === "normal" && !account.suspicious);
+      (filter === "suspicious" && isSuspicious(account)) ||
+      (filter === "normal" && !isSuspicious(account));
     return matchesSearch && matchesFilter;
   });
 
@@ -75,6 +101,22 @@ function AccountList() {
               Monitor and manage all bank accounts for fraud detection and
               suspicious activity tracking
             </p>
+          </div>
+          <div className="header-actions">
+            <button
+              className="action-button test-button"
+              onClick={handleTest}
+              disabled={isRefreshing}>
+              <i className="fas fa-vial"></i>
+              Test
+            </button>
+            <button
+              className="action-button get-data-button"
+              onClick={handleGetData}
+              disabled={isRefreshing}>
+              <i className="fas fa-download"></i>
+              Get Data
+            </button>
           </div>
         </div>
       </div>
@@ -113,26 +155,30 @@ function AccountList() {
           <div
             key={account.accountNumber}
             className={`account-card ${
-              account.suspicious ? "suspicious" : ""
+              isSuspicious(account) ? "suspicious" : ""
             }`}>
             <div className="account-header">
               <div className="account-title">
                 <h3>
                   Account: {account.accountNumber}
-                  {account.suspicious && (
+                  {isSuspicious(account) && (
                     <span className="suspicious-indicator">
                       <i className="fas fa-exclamation-triangle"></i>
                     </span>
                   )}
                 </h3>
               </div>
-              {account.suspicious && (
+              {isSuspicious(account) && (
                 <span className="suspicious-badge">
                   <i className="fas fa-shield-alt"></i> Suspicious
                 </span>
               )}
             </div>
             <div className="account-details">
+              <div className="detail-item">
+                <span className="detail-label">Balance</span>
+                <span className="detail-value">${account.balance}</span>
+              </div>
               <div className="detail-item">
                 <span className="detail-label">Transaction Frequency</span>
                 <span className="detail-value">{account.frequency}</span>
@@ -144,12 +190,14 @@ function AccountList() {
                 </span>
               </div>
               <div className="detail-item">
-                <span className="detail-label">Status</span>
+                <span className="detail-label">Suspicious Score</span>
                 <span
                   className={`detail-value ${
-                    account.suspicious ? "status-suspicious" : "status-normal"
+                    isSuspicious(account)
+                      ? "status-suspicious"
+                      : "status-normal"
                   }`}>
-                  {account.suspicious ? "Suspicious" : "Normal"}
+                  {account.suspiciousScore}
                 </span>
               </div>
             </div>

@@ -66,6 +66,15 @@ function Navbar() {
                 Add Bank
               </Link>
             </li>
+            <li className="nav-item">
+              <Link
+                to="/add-accounts"
+                className={`nav-link ${
+                  isActive("/add-accounts") ? "active" : ""
+                }`}>
+                Add Accounts
+              </Link>
+            </li>
           </ul>
         </div>
       </div>
