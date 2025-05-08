@@ -53,9 +53,10 @@ function AccountList() {
     return (
       <div className="loading">
         <i className="fas fa-circle-notch fa-spin"></i>
-        <p>Loading accounts...</p>
+        <p>Loading Accounts...</p>
       </div>
     );
+
   if (error)
     return (
       <div className="error">
@@ -66,21 +67,17 @@ function AccountList() {
 
   return (
     <div className="account-list-container">
-      <header className="page-header">
+      <div className="dashboard-header">
         <div className="header-content">
-          <h1>Bank Accounts</h1>
-          <button
-            className={`refresh-button ${isRefreshing ? "refreshing" : ""}`}
-            onClick={fetchAccounts}
-            disabled={isRefreshing}>
-            <i
-              className={`fas fa-sync-alt ${
-                isRefreshing ? "fa-spin" : ""
-              }`}></i>
-            {isRefreshing ? "Refreshing..." : "Refresh Data"}
-          </button>
+          <div className="header-title">
+            <h1>Account List</h1>
+            <p className="header-subtitle">
+              Monitor and manage all bank accounts for fraud detection and
+              suspicious activity tracking
+            </p>
+          </div>
         </div>
-      </header>
+      </div>
 
       <div className="filters-section">
         <div className="search-box">

@@ -122,119 +122,117 @@ function FraudOverview() {
 
   return (
     <div className="fraud-overview-container">
-      <header className="dashboard-header">
+      <div className="dashboard-header">
         <div className="header-content">
-          <h1>Fraud Detection System - Overview</h1>
-          <button
-            className={`refresh-button ${isRefreshing ? "refreshing" : ""}`}
-            onClick={fetchData}
-            disabled={isRefreshing}>
-            <i
-              className={`fas fa-sync-alt ${
-                isRefreshing ? "fa-spin" : ""
-              }`}></i>
-            {isRefreshing ? "Refreshing..." : "Refresh Data"}
-          </button>
-        </div>
-      </header>
-
-      <div className="stats-grid">
-        <div className="card">
-          <div className="card-inner">
-            <h3>Total Accounts</h3>
-            <div className="stat-value">
-              {stats.totalAccounts.toLocaleString()}
-            </div>
-            <div className="stat-icon accounts-icon">
-              <i className="fas fa-users"></i>
-            </div>
-          </div>
-        </div>
-
-        <div className="card">
-          <div className="card-inner">
-            <h3>Suspicious Accounts</h3>
-            <div className="stat-value">
-              {stats.totalSuspiciousAccounts.toLocaleString()}
-            </div>
-            <div className="stat-icon suspicious-accounts-icon">
-              <i className="fas fa-user-shield"></i>
-            </div>
-          </div>
-        </div>
-
-        <div className={accountsCardClass}>
-          <div className="card-inner">
-            <h3>% of Suspicious Accounts</h3>
-            <div className="stat-value">
-              {suspiciousAccountsPercentage.toFixed(2)}%
-            </div>
-            <div className="stat-icon percentage-icon">
-              <i className="fas fa-chart-pie"></i>
-            </div>
-          </div>
-        </div>
-
-        <div className="card">
-          <div className="card-inner">
-            <h3>Total Transactions</h3>
-            <div className="stat-value">
-              {stats.totalTransactions.toLocaleString()}
-            </div>
-            <div className="stat-icon transactions-icon">
-              <i className="fas fa-exchange-alt"></i>
-            </div>
-          </div>
-        </div>
-
-        <div className={transactionsCardClass}>
-          <div className="card-inner">
-            <h3>% of Suspicious Transactions</h3>
-            <div className="stat-value">
-              {suspiciousTransactionsPercentage.toFixed(2)}%
-            </div>
-            <div className="stat-icon percentage-icon">
-              <i className="fas fa-exclamation-triangle"></i>
-            </div>
+          <div className="header-title">
+            <h1>Fraud Overview</h1>
+            <p className="header-subtitle">
+              Monitor and analyze fraud detection metrics, suspicious
+              activities, and system performance
+            </p>
           </div>
         </div>
       </div>
 
-      <div className="charts-container">
-        <div className="chart-card">
-          <h3>Account Distribution</h3>
-          <div className="chart-wrapper">
-            <Pie data={accountsChartData} options={chartOptions} />
+      <div className="overview-content">
+        <div className="stats-grid">
+          <div className="card">
+            <div className="card-inner">
+              <h3>Total Accounts</h3>
+              <div className="stat-value">
+                {stats.totalAccounts.toLocaleString()}
+              </div>
+              <div className="stat-icon accounts-icon">
+                <i className="fas fa-users"></i>
+              </div>
+            </div>
+          </div>
+
+          <div className="card">
+            <div className="card-inner">
+              <h3>Suspicious Accounts</h3>
+              <div className="stat-value">
+                {stats.totalSuspiciousAccounts.toLocaleString()}
+              </div>
+              <div className="stat-icon suspicious-accounts-icon">
+                <i className="fas fa-user-shield"></i>
+              </div>
+            </div>
+          </div>
+
+          <div className={accountsCardClass}>
+            <div className="card-inner">
+              <h3>% of Suspicious Accounts</h3>
+              <div className="stat-value">
+                {suspiciousAccountsPercentage.toFixed(2)}%
+              </div>
+              <div className="stat-icon percentage-icon">
+                <i className="fas fa-chart-pie"></i>
+              </div>
+            </div>
+          </div>
+
+          <div className="card">
+            <div className="card-inner">
+              <h3>Total Transactions</h3>
+              <div className="stat-value">
+                {stats.totalTransactions.toLocaleString()}
+              </div>
+              <div className="stat-icon transactions-icon">
+                <i className="fas fa-exchange-alt"></i>
+              </div>
+            </div>
+          </div>
+
+          <div className={transactionsCardClass}>
+            <div className="card-inner">
+              <h3>% of Suspicious Transactions</h3>
+              <div className="stat-value">
+                {suspiciousTransactionsPercentage.toFixed(2)}%
+              </div>
+              <div className="stat-icon percentage-icon">
+                <i className="fas fa-exclamation-triangle"></i>
+              </div>
+            </div>
           </div>
         </div>
-        <div className="chart-card">
-          <h3>Transaction Distribution</h3>
-          <div className="chart-wrapper">
-            <Pie
-              data={{
-                labels: ["Normal Transactions", "Suspicious Transactions"],
-                datasets: [
-                  {
-                    data: [
-                      stats.totalTransactions -
+
+        <div className="charts-container">
+          <div className="chart-card">
+            <h3>Account Distribution</h3>
+            <div className="chart-wrapper">
+              <Pie data={accountsChartData} options={chartOptions} />
+            </div>
+          </div>
+          <div className="chart-card">
+            <h3>Transaction Distribution</h3>
+            <div className="chart-wrapper">
+              <Pie
+                data={{
+                  labels: ["Normal Transactions", "Suspicious Transactions"],
+                  datasets: [
+                    {
+                      data: [
+                        stats.totalTransactions -
+                          stats.totalSuspiciousTransactions,
                         stats.totalSuspiciousTransactions,
-                      stats.totalSuspiciousTransactions,
-                    ],
-                    backgroundColor: ["#10b981", "#ef4444"],
-                    borderColor: ["#059669", "#dc2626"],
-                    borderWidth: 1,
-                  },
-                ],
-              }}
-              options={chartOptions}
-            />
+                      ],
+                      backgroundColor: ["#10b981", "#ef4444"],
+                      borderColor: ["#059669", "#dc2626"],
+                      borderWidth: 1,
+                    },
+                  ],
+                }}
+                options={chartOptions}
+              />
+            </div>
           </div>
         </div>
-      </div>
 
-      <footer className="dashboard-footer">
-        <p>Data Updated: {timestamp.toLocaleString()}</p>
-      </footer>
+        <footer className="dashboard-footer">
+          <p>Data Updated: {timestamp.toLocaleString()}</p>
+        </footer>
+      </div>
     </div>
   );
 }
