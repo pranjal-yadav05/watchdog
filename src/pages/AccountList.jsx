@@ -62,7 +62,7 @@ function AccountList() {
     navigate(`/graph/${accountNumber}/2`);
   };
 
-  const isSuspicious = (account) => account.suspiciousScore > 50;
+  const isSuspicious = (account) => account.suspiciousScore > 0.5;
 
   const filteredAccounts = accounts.filter((account) => {
     const matchesSearch = account.accountNumber
