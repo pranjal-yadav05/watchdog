@@ -3,6 +3,8 @@
   flex-direction: column;
   height: calc(100vh - 100px);
   padding: 20px;
+  padding-top: 120px;
+  margin-top: -20px;
 }
 
 .graph-header {

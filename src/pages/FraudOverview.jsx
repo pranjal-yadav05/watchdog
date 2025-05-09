@@ -29,6 +29,7 @@ function FraudOverview() {
       setIsRefreshing(true);
       const response = await fetch(`${API_BASE_URL}/api/dashboard`);
       const data = await response.json();
+      console.log('data', data)
       setStats(data);
       setTimestamp(new Date());
       setLoading(false);

@@ -12,12 +12,33 @@ function AccountList() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [filter, setFilter] = useState("all"); // 'all', 'suspicious', 'normal'
+  const [notification, setNotification] = useState({
+    show: false,
+    message: "",
+    type: "",
+  });
+  const [isTesting, setIsTesting] = useState(false);
+  const [isGettingData, setIsGettingData] = useState(false);
 
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchAccounts();
   }, []);
+
+  // Auto-hide notification after 5 seconds
+  useEffect(() => {
+    if (notification.show) {
+      const timer = setTimeout(() => {
+        setNotification({ show: false, message: "", type: "" });
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [notification]);
+
+  const showNotification = (message, type) => {
+    setNotification({ show: true, message, type });
+  };
 
   const fetchAccounts = async () => {
     try {
@@ -36,24 +57,52 @@ function AccountList() {
 
   const handleTest = async () => {
     try {
+      setIsTesting(true);
       setIsRefreshing(true);
-      await axios.get("https://frauddetection-r211.onrender.com/api/test");
-      await fetchAccounts(); // Refresh the page data
+      const response = await axios.get(
+        "https://frauddetection-r211.onrender.com/api/test/",
+        {
+          maxRedirects: 0,
+          validateStatus: function (status) {
+            return status >= 200 && status < 400;
+          },
+        }
+      );
+      await fetchAccounts();
+      showNotification(
+        "Test completed successfully! Fraud scores have been updated.",
+        "success"
+      );
     } catch (err) {
-      setError("Failed to run test. Please try again later.");
+      const errorMessage =
+        err.response?.data?.message ||
+        "Failed to run test. Please try again later.";
+      showNotification(errorMessage, "error");
+      setError(errorMessage);
     } finally {
+      setIsTesting(false);
       setIsRefreshing(false);
     }
   };
 
   const handleGetData = async () => {
     try {
+      setIsGettingData(true);
       setIsRefreshing(true);
-      await axios.get(`${API_BASE_URL}/transactions`);
-      await fetchAccounts(); // Refresh the page data
+      const response = await axios.get(`${API_BASE_URL}/transactions`);
+      await fetchAccounts();
+      showNotification(
+        "Data fetched successfully! New transactions have been loaded.",
+        "success"
+      );
     } catch (err) {
-      setError("Failed to get data. Please try again later.");
+      const errorMessage =
+        err.response?.data?.message ||
+        "Failed to get data. Please try again later.";
+      showNotification(errorMessage, "error");
+      setError(errorMessage);
     } finally {
+      setIsGettingData(false);
       setIsRefreshing(false);
     }
   };
@@ -93,6 +142,18 @@ function AccountList() {
 
   return (
     <div className="account-list-container">
+      {notification.show && (
+        <div className={`notification ${notification.type}`}>
+          <i
+            className={`fas ${
+              notification.type === "success"
+                ? "fa-check-circle"
+                : "fa-exclamation-circle"
+            }`}></i>
+          {notification.message}
+        </div>
+      )}
+
       <div className="dashboard-header">
         <div className="header-content">
           <div className="header-title">
@@ -113,18 +174,40 @@ function AccountList() {
           </div>
           <div className="header-actions">
             <button
-              className="action-button test-button"
+              className={`action-button test-button ${
+                isTesting ? "loading" : ""
+              }`}
               onClick={handleTest}
-              disabled={isRefreshing}>
-              <i className="fas fa-vial"></i>
-              Test
+              disabled={isRefreshing || isTesting || isGettingData}>
+              {isTesting ? (
+                <>
+                  <i className="fas fa-circle-notch fa-spin"></i>
+                  <span>Running Test...</span>
+                </>
+              ) : (
+                <>
+                  <i className="fas fa-vial"></i>
+                  <span>Run Test</span>
+                </>
+              )}
             </button>
             <button
-              className="action-button get-data-button"
+              className={`action-button get-data-button ${
+                isGettingData ? "loading" : ""
+              }`}
               onClick={handleGetData}
-              disabled={isRefreshing}>
-              <i className="fas fa-download"></i>
-              Get Data
+              disabled={isRefreshing || isTesting || isGettingData}>
+              {isGettingData ? (
+                <>
+                  <i className="fas fa-circle-notch fa-spin"></i>
+                  <span>Loading Data...</span>
+                </>
+              ) : (
+                <>
+                  <i className="fas fa-download"></i>
+                  <span>Get Data</span>
+                </>
+              )}
             </button>
           </div>
         </div>
