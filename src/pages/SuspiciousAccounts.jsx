@@ -18,7 +18,7 @@ function SuspiciousAccounts() {
       setLoading(true);
       const response = await fetch(`${API_BASE_URL}/api/accounts`);
       const data = await response.json();
-      console.log(data);
+      console.log("accounts", data);
       setAccounts(data);
       setTimestamp(new Date());
       setLoading(false);
@@ -50,7 +50,7 @@ function SuspiciousAccounts() {
     );
 
   const suspiciousCount = accounts.filter(
-    (account) => account.suspicious
+    (account) => account.suspiciousScore > 0.5
   ).length;
 
   return (
@@ -90,12 +90,14 @@ function SuspiciousAccounts() {
             {accounts.map((account) => (
               <tr
                 key={account.accountNumber}
-                className={account.suspicious ? "suspicious-row" : ""}>
+                className={
+                  account.suspiciousScore > 0.5 ? "suspicious-row" : ""
+                }>
                 <td className="account-number">{account.accountNumber}</td>
                 <td>{account.frequency}</td>
                 <td>{formatDate(account.lastTransaction)}</td>
                 <td className="status-cell">
-                  {account.suspicious ? (
+                  {account.suspiciousScore > 0.5 ? (
                     <div className="suspicious-indicator">
                       <span className="status-text">Suspicious</span>
                     </div>
