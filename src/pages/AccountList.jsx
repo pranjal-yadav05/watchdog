@@ -59,7 +59,7 @@ function AccountList() {
     try {
       setIsTesting(true);
       setIsRefreshing(true);
-      const response = await axios.get(
+      await axios.get(
         "https://frauddetection-r211.onrender.com/api/test/",
         {
           maxRedirects: 0,
@@ -89,7 +89,7 @@ function AccountList() {
     try {
       setIsGettingData(true);
       setIsRefreshing(true);
-      const response = await axios.get(`${API_BASE_URL}/transactions`);
+      await axios.get(`${API_BASE_URL}/transactions`);
       await fetchAccounts();
       showNotification(
         "Data fetched successfully! New transactions have been loaded.",

@@ -11,7 +11,7 @@ function SuspiciousTransactions() {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [fetchData]);
 
   const fetchData = async () => {
     try {
