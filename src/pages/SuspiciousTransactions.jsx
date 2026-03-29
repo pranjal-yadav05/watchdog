@@ -10,25 +10,25 @@ function SuspiciousTransactions() {
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
   useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch(`${API_BASE_URL}/api/transactions/getall`);
+        const data = await response.json();
+        console.log("all trans: ", data);
+        setTransactions(data);
+        setTimestamp(new Date());
+        setLoading(false);
+      } catch (err) {
+        setError(
+          "Error loading suspicious transactions. Please try again later."
+        );
+        setLoading(false);
+      }
+    };
+    
     fetchData();
-  }, [fetchData]);
-
-  const fetchData = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch(`${API_BASE_URL}/api/transactions/getall`);
-      const data = await response.json();
-      console.log("all trans: ", data);
-      setTransactions(data);
-      setTimestamp(new Date());
-      setLoading(false);
-    } catch (err) {
-      setError(
-        "Error loading suspicious transactions. Please try again later."
-      );
-      setLoading(false);
-    }
-  };
+  }, [API_BASE_URL]);
 
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";

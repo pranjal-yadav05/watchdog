@@ -9,33 +9,33 @@ function UserDetails() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    fetchAllUsers();
-  }, []);
-
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
-  const fetchAllUsers = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch(`${API_BASE_URL}/api/users`);
-      const data = await response.json();
-      console.log(data);
-      setUsers(data);
+  useEffect(() => {
+    const fetchAllUsers = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch(`${API_BASE_URL}/api/users`);
+        const data = await response.json();
+        console.log(data);
+        setUsers(data);
 
-      // Set the first user as selected by default if available
-      if (data.length > 0) {
-        setSelectedUser(data[0]);
+        // Set the first user as selected by default if available
+        if (data.length > 0) {
+          setSelectedUser(data[0]);
+        }
+
+        setLoading(false);
+      } catch (err) {
+        setError(
+          "उपयोगकर्ता डेटा लोड करने में त्रुटि हुई। कृपया बाद में पुन: प्रयास करें।"
+        );
+        setLoading(false);
       }
-
-      setLoading(false);
-    } catch (err) {
-      setError(
-        "उपयोगकर्ता डेटा लोड करने में त्रुटि हुई। कृपया बाद में पुन: प्रयास करें।"
-      );
-      setLoading(false);
-    }
-  };
+    };
+    
+    fetchAllUsers();
+  }, [API_BASE_URL]);
 
   const handleUserSelect = (user) => {
     setSelectedUser(user);
@@ -86,7 +86,7 @@ function UserDetails() {
             </p>
           </div>
           <div className="header-actions">
-            <button onClick={fetchAllUsers} className="refresh-button">
+            <button onClick={() => window.location.reload()} className="refresh-button">
               <i className="fas fa-sync-alt"></i>
               Refresh
             </button>

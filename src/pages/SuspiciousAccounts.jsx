@@ -7,26 +7,26 @@ function SuspiciousAccounts() {
   const [error, setError] = useState(null);
   const [timestamp, setTimestamp] = useState(new Date());
 
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
-
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
-  const fetchData = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch(`${API_BASE_URL}/api/accounts`);
-      const data = await response.json();
-      console.log("accounts", data);
-      setAccounts(data);
-      setTimestamp(new Date());
-      setLoading(false);
-    } catch (err) {
-      setError("Error loading suspicious accounts. Please try again later.");
-      setLoading(false);
-    }
-  };
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch(`${API_BASE_URL}/api/accounts`);
+        const data = await response.json();
+        console.log("accounts", data);
+        setAccounts(data);
+        setTimestamp(new Date());
+        setLoading(false);
+      } catch (err) {
+        setError("Error loading suspicious accounts. Please try again later.");
+        setLoading(false);
+      }
+    };
+    
+    fetchData();
+  }, [API_BASE_URL]);
 
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";

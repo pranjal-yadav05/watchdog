@@ -1,9 +1,19 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import WorkflowGuide from "../components/WorkflowGuide";
+import { useWorkflowProgress } from "../hooks/useWorkflowProgress";
 import "./AddAccounts.css";
+
+const FRAUD_SERVICE_URL = process.env.REACT_APP_FRAUD_SERVICE_URL || 'http://localhost:5005';
 
 function AddAccounts() {
   const navigate = useNavigate();
+  const { markVisitedAddAccounts } = useWorkflowProgress();
+
+  useEffect(() => {
+    markVisitedAddAccounts();
+  }, [markVisitedAddAccounts]);
+
   const [formData, setFormData] = useState({
     num_accounts: 0,
     num_transactions: 0,
@@ -24,82 +34,94 @@ function AddAccounts() {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
-    setSuccess(false);
+      e.preventDefault();
+      setLoading(true);
+      setError(null);
+      setSuccess(false);
 
-    const { num_accounts, num_transactions, num_fraud_accounts } = formData;
+      const { num_accounts, num_transactions, num_fraud_accounts } = formData;
 
-    // Validate minimum values
-    if (num_accounts < 1) {
-      setError("Number of accounts must be at least 1");
-      setLoading(false);
-      return;
-    }
-    if (num_transactions < 1) {
-      setError("Number of transactions must be at least 1");
-      setLoading(false);
-      return;
-    }
-    if (num_fraud_accounts < 0) {
-      setError("Number of fraud accounts cannot be negative");
-      setLoading(false);
-      return;
-    }
-
-    // Validate maximum values
-    if (num_accounts > 50) {
-      setError("Maximum number of accounts is 50");
-      setLoading(false);
-      return;
-    }
-    if (num_transactions > 150) {
-      setError("Maximum number of transactions is 150");
-      setLoading(false);
-      return;
-    }
-    if (num_fraud_accounts > 30) {
-      setError("Maximum number of fraud accounts is 30");
-      setLoading(false);
-      return;
-    }
-    if (num_fraud_accounts > num_accounts) {
-      setError(
-        "Number of fraud accounts cannot be greater than total accounts"
-      );
-      setLoading(false);
-      return;
-    }
-
-    try {
-      const response = await fetch(
-        "https://frauddetection-r211.onrender.com/api/bank/create-graph",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(formData),
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to generate accounts");
+      // Validate minimum values
+      if (num_accounts < 1) {
+        setError("Number of accounts must be at least 1");
+        setLoading(false);
+        return;
+      }
+      if (num_transactions < 1) {
+        setError("Number of transactions must be at least 1");
+        setLoading(false);
+        return;
+      }
+      if (num_fraud_accounts < 0) {
+        setError("Number of fraud accounts cannot be negative");
+        setLoading(false);
+        return;
       }
 
-      setSuccess(true);
-      // Navigate to account list after successful submission
-      navigate("/trackaccount");
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+      // Validate maximum values
+      if (num_accounts > 50) {
+        setError("Maximum number of accounts is 50");
+        setLoading(false);
+        return;
+      }
+      if (num_transactions > 150) {
+        setError("Maximum number of transactions is 150");
+        setLoading(false);
+        return;
+      }
+      if (num_fraud_accounts > 30) {
+        setError("Maximum number of fraud accounts is 30");
+        setLoading(false);
+        return;
+      }
+      if (num_fraud_accounts > num_accounts) {
+        setError(
+          "Number of fraud accounts cannot be greater than total accounts"
+        );
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const response = await fetch(
+          `${FRAUD_SERVICE_URL}/api/bank/create-graph`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(formData),
+          }
+        );
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error || "Failed to generate accounts. Please ensure FraudService is running on port 5005.");
+        }
+
+        await response.json();
+        setSuccess(true);
+
+        // Show success message with next steps
+        setTimeout(() => {
+          navigate("/trackaccount");
+        }, 2000);
+      } catch (err) {
+        let errorMessage = err.message;
+
+        if (err.message.includes("Failed to fetch")) {
+          errorMessage = "Cannot connect to FraudService. Please ensure it's running on port 5005.";
+        }
+
+        setError(errorMessage);
+      } finally {
+        setLoading(false);
+      }
+    };
 
   return (
     <div className="add-accounts-container">
+      <WorkflowGuide variant="compact" />
       <div className="dashboard-header">
         <div className="header-content">
           <div className="header-title">
@@ -108,11 +130,9 @@ function AddAccounts() {
               Generate a set of accounts with transactions and fraud patterns
               for testing
             </p>
-            <p
-              className="note-text"
-              style={{ color: "#ff6b6b", marginTop: "10px" }}>
-              NOTE: THIS WILL ADD THE DUMMY DATA TO BANK MICROSERVICE
-            </p>
+            <div className="note-text">
+              ⚠ Warning: This will add dummy data to the bank microservice
+            </div>
           </div>
         </div>
       </div>

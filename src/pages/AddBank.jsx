@@ -49,8 +49,8 @@ function AddBank() {
     setSuccess(false);
 
     try {
-      const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
-      const response = await fetch(`${API_BASE_URL}/config/bank`, {
+      const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:9000';
+      const response = await fetch(`${API_BASE_URL}/api/config/bank`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -110,7 +110,7 @@ function AddBank() {
         {success && (
           <div className="success-message">
             <i className="fas fa-check-circle"></i>
-            {success}
+            Bank added successfully!
           </div>
         )}
         <form onSubmit={handleSubmit} className="add-bank-form">

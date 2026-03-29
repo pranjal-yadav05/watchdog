@@ -1,9 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import EmptyState from "../components/EmptyState";
+import WorkflowGuide from "../components/WorkflowGuide";
+import { useWorkflowProgress } from "../hooks/useWorkflowProgress";
+import { isSuspiciousAccount } from "../constants/fraudThreshold";
 import "./AccountList.css";
 
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL + "/api";
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:9000';
 
 function AccountList() {
   const [accounts, setAccounts] = useState([]);
@@ -21,6 +25,7 @@ function AccountList() {
   const [isGettingData, setIsGettingData] = useState(false);
 
   const navigate = useNavigate();
+  const { markDataLoaded, markTestRun } = useWorkflowProgress();
 
   useEffect(() => {
     fetchAccounts();
@@ -43,7 +48,7 @@ function AccountList() {
   const fetchAccounts = async () => {
     try {
       setIsRefreshing(true);
-      const response = await axios.get(`${API_BASE_URL}/accounts`);
+      const response = await axios.get(`${API_BASE_URL}/api/accounts`);
       console.log("accounts", response.data);
       setAccounts(response.data);
       setLoading(false);
@@ -56,62 +61,88 @@ function AccountList() {
   };
 
   const handleTest = async () => {
-    try {
-      setIsTesting(true);
-      setIsRefreshing(true);
-      await axios.get(
-        "https://frauddetection-r211.onrender.com/api/test/",
-        {
-          maxRedirects: 0,
-          validateStatus: function (status) {
-            return status >= 200 && status < 400;
-          },
+      try {
+        setIsTesting(true);
+        setIsRefreshing(true);
+
+        // Call FraudService directly, bypassing the proxy
+        const FRAUD_SERVICE_URL = process.env.REACT_APP_FRAUD_SERVICE_URL || 'http://localhost:5005';
+        await axios.get(
+          `${FRAUD_SERVICE_URL}/api/test`,
+          {
+            maxRedirects: 0,
+            validateStatus: function (status) {
+              return status >= 200 && status < 400;
+            },
+          }
+        );
+        await fetchAccounts();
+        markTestRun();
+        showNotification(
+          "Test completed successfully! Fraud scores have been updated.",
+          "success"
+        );
+      } catch (err) {
+        let errorMessage = "Failed to run test. Please try again later.";
+
+        if (err.response?.status === 404) {
+          errorMessage = "Test endpoint not found. Please ensure the FraudService is running on port 5005.";
+        } else if (err.response?.status === 400) {
+          errorMessage = "Invalid data format. Please click 'Get Data' first to load fresh account data.";
+        } else if (err.response?.data?.message) {
+          errorMessage = err.response.data.message;
         }
-      );
-      await fetchAccounts();
-      showNotification(
-        "Test completed successfully! Fraud scores have been updated.",
-        "success"
-      );
-    } catch (err) {
-      const errorMessage =
-        err.response?.data?.message ||
-        "Failed to run test. Please try again later.";
-      showNotification(errorMessage, "error");
-      setError(errorMessage);
-    } finally {
-      setIsTesting(false);
-      setIsRefreshing(false);
-    }
-  };
+
+        showNotification(errorMessage, "error");
+        setError(errorMessage);
+      } finally {
+        setIsTesting(false);
+        setIsRefreshing(false);
+      }
+    };
 
   const handleGetData = async () => {
-    try {
-      setIsGettingData(true);
-      setIsRefreshing(true);
-      await axios.get(`${API_BASE_URL}/transactions`);
-      await fetchAccounts();
-      showNotification(
-        "Data fetched successfully! New transactions have been loaded.",
-        "success"
-      );
-    } catch (err) {
-      const errorMessage =
-        err.response?.data?.message ||
-        "Failed to get data. Please try again later.";
-      showNotification(errorMessage, "error");
-      setError(errorMessage);
-    } finally {
-      setIsGettingData(false);
-      setIsRefreshing(false);
-    }
-  };
+      try {
+        setIsGettingData(true);
+        setIsRefreshing(true);
+        await axios.get(`${API_BASE_URL}/api/transactions`);
+        await fetchAccounts();
+        markDataLoaded();
+        showNotification(
+          "Data fetched successfully! New transactions have been loaded.",
+          "success"
+        );
+      } catch (err) {
+        let errorMessage = "Failed to get data. Please try again later.";
+
+        if (err.response?.status === 404) {
+          errorMessage = "No bank data found. Please generate accounts first using 'Add Accounts' page.";
+        } else if (err.response?.status === 400) {
+          // Check if there's a specific error message from the backend
+          if (err.response?.data?.error) {
+            errorMessage = err.response.data.error;
+          } else {
+            errorMessage = "No accounts found in the system. Please generate accounts first by clicking 'Generate Accounts' below.";
+          }
+        } else if (err.response?.status === 500) {
+          errorMessage = "Server error. Please ensure all services (CenterSystem, FraudService) are running.";
+        } else if (err.response?.data?.message) {
+          errorMessage = err.response.data.message;
+        } else if (err.response?.data?.error) {
+          errorMessage = err.response.data.error;
+        }
+
+        showNotification(errorMessage, "error");
+        setError(errorMessage);
+      } finally {
+        setIsGettingData(false);
+        setIsRefreshing(false);
+      }
+    };
 
   const handleViewGraph = (accountNumber) => {
     navigate(`/graph/${accountNumber}/2`);
   };
-
-  const isSuspicious = (account) => account.suspiciousScore > 0.5;
 
   const filteredAccounts = accounts.filter((account) => {
     const matchesSearch = account.accountNumber
@@ -119,8 +150,8 @@ function AccountList() {
       .includes(searchTerm.toLowerCase());
     const matchesFilter =
       filter === "all" ||
-      (filter === "suspicious" && isSuspicious(account)) ||
-      (filter === "normal" && !isSuspicious(account));
+      (filter === "suspicious" && isSuspiciousAccount(account)) ||
+      (filter === "normal" && !isSuspiciousAccount(account));
     return matchesSearch && matchesFilter;
   });
 
@@ -142,6 +173,7 @@ function AccountList() {
 
   return (
     <div className="account-list-container">
+      <WorkflowGuide variant="compact" />
       {notification.show && (
         <div className={`notification ${notification.type}`}>
           <i
@@ -162,23 +194,22 @@ function AccountList() {
               Monitor and manage all bank accounts for fraud detection and
               suspicious activity tracking
             </p>
-            <p
-              className="note-text"
-              style={{ color: "#ff6b6b", marginTop: "10px" }}>
-              NOTE: GET DATA BEFORE TEST
+            <div className="note-text">
+              <strong>Important:</strong> Get Data before running Test
               <br />
-              GET: FOR LOADING DATA INTO CENTER SYSTEM FROM BANK
-              <br />
-              TEST: TO CALCULATE FRUAD SCORE
-            </p>
+              <span style={{ fontSize: '0.75rem', fontWeight: 500, textTransform: 'none', letterSpacing: 'normal' }}>
+                GET: Load data from bank into center system • TEST: Calculate fraud scores
+              </span>
+            </div>
           </div>
           <div className="header-actions">
             <button
               className={`action-button test-button ${
                 isTesting ? "loading" : ""
-              }`}
+              } ${accounts.length === 0 ? "disabled-tooltip" : ""}`}
               onClick={handleTest}
-              disabled={isRefreshing || isTesting || isGettingData}>
+              disabled={isRefreshing || isTesting || isGettingData || accounts.length === 0}
+              title={accounts.length === 0 ? "Please load accounts first by clicking 'Get Data'" : ""}>
               {isTesting ? (
                 <>
                   <i className="fas fa-circle-notch fa-spin"></i>
@@ -247,20 +278,20 @@ function AccountList() {
           <div
             key={account.accountNumber}
             className={`account-card ${
-              isSuspicious(account) ? "suspicious" : ""
+              isSuspiciousAccount(account) ? "suspicious" : ""
             }`}>
             <div className="account-header">
               <div className="account-title">
                 <h3>
                   Account: {account.accountNumber}
-                  {isSuspicious(account) && (
+                  {isSuspiciousAccount(account) && (
                     <span className="suspicious-indicator">
                       <i className="fas fa-exclamation-triangle"></i>
                     </span>
                   )}
                 </h3>
               </div>
-              {isSuspicious(account) && (
+              {isSuspiciousAccount(account) && (
                 <span className="suspicious-badge">
                   <i className="fas fa-shield-alt"></i> Suspicious
                 </span>
@@ -281,7 +312,7 @@ function AccountList() {
                 <span className="detail-label">Suspicious Score</span>
                 <span
                   className={`detail-value ${
-                    isSuspicious(account)
+                    isSuspiciousAccount(account)
                       ? "status-suspicious"
                       : "status-normal"
                   }`}>
@@ -299,7 +330,29 @@ function AccountList() {
         ))}
       </div>
 
-      {filteredAccounts.length === 0 && (
+      {filteredAccounts.length === 0 && accounts.length === 0 && !loading && (
+        <EmptyState
+          icon="fa-inbox"
+          title="No Accounts Available"
+          description="Get started by generating dummy accounts for testing or loading data from your bank system."
+          actions={[
+            {
+              label: 'Generate Accounts',
+              icon: 'fa-plus-circle',
+              path: '/add-accounts',
+              variant: 'primary'
+            },
+            {
+              label: 'Get Data from Bank',
+              icon: 'fa-download',
+              onClick: handleGetData,
+              variant: 'secondary'
+            }
+          ]}
+        />
+      )}
+
+      {filteredAccounts.length === 0 && accounts.length > 0 && (
         <div className="no-results">
           <i className="fas fa-search"></i>
           <p>No accounts found matching your criteria</p>
